@@ -1,0 +1,104 @@
+########################################################
+> What are the options to optimize the size of a Postgres database?
+########################################################
+
+In fact, optimization include periodic clean-up from application which uses Postgres.
+As well as automatic maintenance.
+As well as routine manual maintenance.
+
+In my experience, this is not actual optimization of size, but more like performance optimization.
+Because in production we do not limit size.
+
+1. http://www.postgresql.org/docs/9.2/static/routine-vacuuming.html
+2. vacuum full freeze verbose ;
+3. cluster pk_<table> on <table> ;
+ 
+########################################################
+> What is the difference between HAVING and WHERE?
+########################################################
+
+HAVING common use for aggregate 'Select' -only'.
+WHERE can be used for 'INSERT' 'UPDATE' as well.
+
+We have temporarily resultSet 'and we aggregate functions here >> HAVING
+Second column (cpu_power) should be always function (sum in that case)
+
+im=# select last_changed,sum(cpu_power) from ve group by last_changed HAVING last_changed > '2016-06-03';
+        last_changed        | sum  
+----------------------------+------
+ 2016-06-03 17:06:04.741+03 | 1000
+ 2016-06-03 13:38:20.845+03 | 1000
+(2 rows)
+
+Otherwise, we do not get result.
+
+im=# select last_changed,* from ve group by last_changed HAVING last_changed > '2016-06-03';
+ERROR:  column "ve.id" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: select last_changed,* from ve group by last_changed HAVING l...
+
+Or if we use SELECT in wrong way
+
+m=# select last_changed,sum(cpu_power) from ve where last_changed > '2016-06-03';
+ERROR:  column "ve.last_changed" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: select last_changed,sum(cpu_power) from ve where last_change.
+
+
+In short, having - for group rows created by the GROUP BY clause after the GROUP BY
+WHERE clause - for individual rows before GROUP BY clause applies
+
+#######################################################################
+> What are the reasons that an application might throw "java.lang.OutOfMemoryError"?
+#######################################################################
+
+-XX:MaxPermSize=256m
+-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:+CMSIncrementalMode -XX:+CMSIncrementalPacing -XX:CMSIncrementalDutyCycleMin=5 -XX:CMSIncrementalDutyCycle=10 -XX:CMSInitiatingOccupancyFraction=70
+-Xmx768m -Xms768m -XX:+HeapDumpOnOutOfMemoryError
+
+Xmx - max Heap Size.
+Here java.lang.OutOfMemoryError occur when all 768mb of JVM Xmx will be occupied and application.
+Will attempt to create new object.
+
+Also, OOM could occur due to PermSize exceeded but very rare.
+Class definitions are stored here, static instances. Tough to overuse that.
+
+
+################################
+> How many lines are directed to stdin?
+#######################################
+
+3 lines
+(cat test | wc -l = 3)
+
+#######################################
+> How many lines are directed to stdout?
+#######################################
+1 line
+
+##########################################
+> What is different about the output versus the input?
+##########################################
+
+Text piped to perl <script.pl> and only after that went  to stdout.
+Therefore difference is in 'transformation', - stdout transformed over perl script.
+
+Regexp will took only line where
+
+'<string started with num>
++ <first num contain 4 digits>
++ <separated with '-'>
++ <2 more nums of 2 digits>
+
+And stdout that in different way, 2rst num, 3rd num, 1st num
+Therefore, '2016-12-03' is the only string with stdout transformed to '12-03-2016'
+
+##########################################
+> What is the use strict; line and what does it do?
+##########################################
+
+'strict' generates a compile-time/runtime errors.
+
+Generates a compile-time error if you access a variable without declaration.
+A runtime error if you use symbolic references.
+Compile-time error if you try to use a bareword identifier in an improper way.
+
+
